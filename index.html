@@ -193,6 +193,24 @@ button.btn-small { padding: 6px 14px; font-size: 0.75rem; }
 .game-over-inner .final-score { font-size: 2.5rem; font-weight: 800; color: #2563EB; margin: 16px 0; }
 .game-over-inner .final-rank { font-size: 1.1rem; color: #444; margin-bottom: 24px; }
 
+/* Round guide */
+#round-guide {
+  border-left: 4px solid #2563eb; border-radius: 12px;
+  padding: 20px 24px; line-height: 1.7;
+}
+#round-guide h3 { background: linear-gradient(transparent 55%, #bfdbfe 55%); display: inline; font-size: 0.9rem; }
+#round-guide p { font-size: 0.88rem; color: #444; margin-top: 10px; }
+#round-guide .guide-tip {
+  margin-top: 12px; padding: 12px 16px;
+  background: #fff; border: 1.5px solid #e0dcd4; border-radius: 8px;
+  font-size: 0.85rem; color: #333; line-height: 1.6;
+}
+#round-guide .guide-tip strong { color: #1a1a1a; }
+#round-guide .guide-concept {
+  display: inline-block; background: #fde68a; border-radius: 4px;
+  padding: 1px 6px; font-weight: 600; font-size: 0.82rem; color: #7c6600;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .segment-grid { grid-template-columns: 1fr; }
@@ -213,7 +231,7 @@ button.btn-small { padding: 6px 14px; font-size: 0.75rem; }
       <div class="intro-the">the</div>
       <div class="intro-title"><span class="intro-title-highlight">Strategy Canvas</span> Arena</div>
       <div class="intro-rule"></div>
-      <div class="intro-subtitle">Practice making strategic trade-offs against AI competitors</div>
+      <div class="intro-subtitle">Put your d.MBA strategy skills into practice against AI competitors</div>
       <button class="primary" style="padding:16px 56px;font-size:1rem;" onclick="showBriefing()">Begin</button>
     </div>
   </div>
@@ -224,9 +242,10 @@ button.btn-small { padding: 6px 14px; font-size: 0.75rem; }
   <div id="brief-1" class="briefing-page">
     <div class="briefing-step">Step 1 of 3 — The Scenario</div>
     <h1>You're the CEO of an AI design tool startup</h1>
-    <p>You've raised seed funding and have 3 rounds to build the most successful product. Each round you'll decide which customer segment to target and how to allocate your investment across 7 product areas.</p>
+    <p>In the d.MBA practice session, you explored how strategy is about making deliberate trade-offs — choosing what to invest in <em>and what to sacrifice</em>. Now you'll put that thinking into action.</p>
+    <p>You've raised seed funding and have 3 rounds to build the most successful product. Each round you'll decide which customer segment to target and how to allocate your investment. You're competing against 6 AI-controlled companies — each with their own strategy.</p>
     <div class="briefing-callout">
-      <strong>The catch:</strong> You have a limited budget of <strong>20 points</strong> to spread across 7 activities. You can't be great at everything — that's the strategic trade-off.
+      <strong>The catch:</strong> You have a limited budget of <strong>20 points</strong> to spread across 7 activities. You can't be great at everything — that's the strategic trade-off. Remember: a flat strategy canvas (3s across the board) means you're not making any real choices.
     </div>
     <div class="briefing-nav">
       <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
@@ -254,7 +273,13 @@ button.btn-small { padding: 6px 14px; font-size: 0.75rem; }
     <p>Each segment has different needs and willingness to pay. Pick one per round.</p>
     <div id="brief-segments" style="margin-top:16px;"></div>
     <div class="briefing-callout" style="margin-top:16px;">
-      <strong>Remember:</strong> Strategy is what you choose <em>not</em> to do. You're competing against 6 other companies (AI-controlled). After 3 rounds, the team with the highest cumulative revenue wins.
+      <strong>Key concepts from the session:</strong>
+      <ul style="margin:8px 0 0 18px;line-height:1.8;font-size:0.88rem;color:#444;">
+        <li><strong>Strategy is what you choose not to do</strong> — every point you spend somewhere is a point you can't spend elsewhere</li>
+        <li><strong>Fit matters</strong> — each segment values different things. Investing in what they don't care about is wasted budget</li>
+        <li><strong>Focus beats spreading thin</strong> — sticking with a segment gives you a loyalty bonus. Pivoting means starting over</li>
+        <li><strong>Differentiation wins</strong> — if your strategy looks identical to a competitor's, you'll split the market</li>
+      </ul>
     </div>
     <div class="briefing-nav">
       <div class="dot active"></div><div class="dot active"></div><div class="dot active"></div>
@@ -281,6 +306,8 @@ button.btn-small { padding: 6px 14px; font-size: 0.75rem; }
       <div class="big-num">+$<span id="result-revenue">0</span></div>
       <div class="result-meta"><span id="result-customers">0</span> customers | <span id="result-share">0</span>% market share</div>
     </div>
+
+    <div id="round-guide" class="card" style="border-color:#2563eb;background:#fafbff;"></div>
 
     <div id="controls-card" class="card">
       <h3>Target Customer Segment</h3>
@@ -688,6 +715,41 @@ function showBrief(n) {
   window.scrollTo(0,0);
 }
 
+const ROUND_GUIDES = {
+  1: {
+    title: 'Round 1 — Make your first strategic bet',
+    body: `<p>In the d.MBA session you explored how strategy is fundamentally about <span class="guide-concept">trade-offs</span> — choosing what to do <em>and what not to do</em>. Now it's time to put that into practice.</p>
+    <p>You're competing against 6 other companies. Each one has already made their strategic choices. Your job: pick a customer segment and decide where to invest your 20 points.</p>
+    <div class="guide-tip">
+      <strong>Think about:</strong> Which segment do you understand best? Where can you create a product that genuinely fits what they need — not just a bit of everything? Remember the <span class="guide-concept">Strategy Canvas</span> — your shape should look deliberately different from a flat line across the middle.
+    </div>`,
+  },
+  2: {
+    title: 'Round 2 — Respond to the market',
+    body: `<p>You've seen your Round 1 results and how other teams positioned themselves. Now comes the real strategic question: <strong>do you double down or pivot?</strong></p>
+    <p>In the session we discussed how <span class="guide-concept">focus</span> creates advantage — companies that stick with their segment and refine their offering get a loyalty bonus. But if you're in a crowded segment, that focus comes at a cost.</p>
+    <div class="guide-tip">
+      <strong>Think about:</strong> Look at the strategy canvases from Round 1. Are you competing head-to-head with someone? If so, how will you <span class="guide-concept">differentiate</span> — what will you Raise or Eliminate that they won't? Is there an unserved segment that's wide open? Switching costs you the focus bonus, but owning uncontested space can be worth it.
+    </div>`,
+  },
+  3: {
+    title: 'Round 3 — Adapt under pressure',
+    body: `<p>A market shock has just hit — new EU AI regulation means <strong>privacy is now a top priority</strong> for every customer segment. This is exactly the kind of external disruption we discussed in the session.</p>
+    <p>The question isn't whether to respond — it's <em>how much</em> to respond. Shifting your entire strategy to chase privacy means abandoning what you built. But ignoring it could cost you customers.</p>
+    <div class="guide-tip">
+      <strong>Think about:</strong> This is about <span class="guide-concept">strategic agility</span> versus <span class="guide-concept">strategic commitment</span>. Teams that already invested in privacy have a head start. If you didn't, you need to decide: make a measured adjustment, or do a full pivot? There's no right answer — but there is a <em>deliberate</em> one.
+    </div>`,
+  },
+};
+
+function renderRoundGuide() {
+  const guide = ROUND_GUIDES[game.round];
+  if (!guide) return;
+  const el = document.getElementById('round-guide');
+  el.innerHTML = `<h3>${esc(guide.title)}</h3>${guide.body}`;
+  el.classList.remove('hidden');
+}
+
 function startGame() {
   initGame();
   showScreen('screen-game');
@@ -698,6 +760,7 @@ function startGame() {
   document.getElementById('result-banner').classList.add('hidden');
   document.getElementById('shock-banner').classList.add('hidden');
   document.getElementById('submit-btn').disabled = false;
+  renderRoundGuide();
   renderLeaderboard('leaderboard');
   updateBubbleUI();
   updateMiniCanvas();
@@ -743,6 +806,7 @@ function submitRound() {
 
   document.getElementById('submit-btn').disabled = true;
   document.getElementById('controls-card').classList.add('hidden');
+  document.getElementById('round-guide').classList.add('hidden');
   showResults(results);
 }
 
@@ -790,6 +854,7 @@ function nextRound(triggerShock) {
   document.getElementById('analysis-section').classList.add('hidden');
   document.getElementById('result-banner').classList.add('hidden');
   document.getElementById('submit-btn').disabled = false;
+  renderRoundGuide();
   updateBubbleUI();
   updateMiniCanvas();
   window.scrollTo(0, 0);
