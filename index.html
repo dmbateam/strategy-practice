@@ -193,6 +193,38 @@ button.btn-small { padding: 6px 14px; font-size: 0.75rem; }
 .game-over-inner .final-score { font-size: 2.5rem; font-weight: 800; color: #2563EB; margin: 16px 0; }
 .game-over-inner .final-rank { font-size: 1.1rem; color: #444; margin-bottom: 24px; }
 
+/* Brief toggle */
+.brief-toggle {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 18px; margin-bottom: 12px; cursor: pointer;
+  background: #fff; border: 2px solid #d0ccc4; border-radius: 10px;
+  font-size: 0.82rem; font-weight: 600; color: #666; letter-spacing: 0.03em;
+  transition: all 0.15s; user-select: none;
+}
+.brief-toggle:hover { background: #faf6ef; border-color: #aaa; color: #444; }
+.brief-arrow { font-size: 0.7rem; transition: transform 0.2s; }
+.brief-arrow.open { transform: rotate(180deg); }
+#inline-brief {
+  background: #fff; border: 2px solid #d0ccc4; border-radius: 12px;
+  padding: 24px; margin-bottom: 16px; line-height: 1.7;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+#inline-brief h4 {
+  font-size: 0.82rem; font-weight: 700; letter-spacing: 0.04em;
+  margin-top: 18px; margin-bottom: 6px; color: #1a1a1a;
+}
+#inline-brief h4:first-child { margin-top: 0; }
+#inline-brief p, #inline-brief li { font-size: 0.85rem; color: #444; }
+#inline-brief ul { padding-left: 18px; margin: 4px 0; }
+#inline-brief li { line-height: 1.7; margin-bottom: 2px; }
+#inline-brief .brief-seg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+#inline-brief .brief-seg-item {
+  border: 1.5px solid #e0dcd4; border-radius: 8px; padding: 10px; text-align: center;
+}
+#inline-brief .brief-seg-item strong { display: block; font-size: 0.85rem; margin-bottom: 3px; }
+#inline-brief .brief-seg-item span { font-size: 0.78rem; color: #666; }
+@media (max-width: 600px) { #inline-brief .brief-seg-grid { grid-template-columns: 1fr; } }
+
 /* Round guide */
 #round-guide {
   border-left: 4px solid #2563eb; border-radius: 12px;
@@ -306,6 +338,12 @@ button.btn-small { padding: 6px 14px; font-size: 0.75rem; }
       <div class="big-num">+$<span id="result-revenue">0</span></div>
       <div class="result-meta"><span id="result-customers">0</span> customers | <span id="result-share">0</span>% market share</div>
     </div>
+
+    <div class="brief-toggle" onclick="toggleBrief()">
+      <span>Game Brief — review rules, segments &amp; key concepts</span>
+      <span class="brief-arrow" id="brief-arrow">&#9660;</span>
+    </div>
+    <div id="inline-brief" class="hidden"></div>
 
     <div id="round-guide" class="card" style="border-color:#2563eb;background:#fafbff;"></div>
 
@@ -742,6 +780,34 @@ const ROUND_GUIDES = {
   },
 };
 
+function buildInlineBrief() {
+  const acts = CONFIG.activities.map(a => `<li><strong>${esc(a.name)}</strong> — ${esc(a.description)}</li>`).join('');
+  let segs = '';
+  for (const [, seg] of Object.entries(CONFIG.segments)) {
+    segs += `<div class="brief-seg-item"><strong>${esc(seg.name)}</strong><span>${esc(seg.description)}<br>WTP: $${seg.wtp}/mo</span></div>`;
+  }
+  document.getElementById('inline-brief').innerHTML = `
+    <h4>The Scenario</h4>
+    <p>You're the CEO of an AI design tool startup. You have 20 points to invest across 7 product areas, competing against 6 AI companies over 3 rounds.</p>
+    <h4>Investment Areas (0–5 points each)</h4>
+    <ul>${acts}</ul>
+    <h4>Customer Segments</h4>
+    <div class="brief-seg-grid">${segs}</div>
+    <h4>Key Concepts</h4>
+    <ul>
+      <li><strong>Trade-offs</strong> — you can't be great at everything; every point spent is a point not spent elsewhere</li>
+      <li><strong>Fit</strong> — each segment values different things; invest in what they care about</li>
+      <li><strong>Focus bonus</strong> — sticking with the same segment across rounds earns a loyalty bonus</li>
+      <li><strong>Differentiation</strong> — identical strategies split the market; unique positioning is rewarded</li>
+    </ul>`;
+}
+let briefOpen = false;
+function toggleBrief() {
+  briefOpen = !briefOpen;
+  document.getElementById('inline-brief').classList.toggle('hidden', !briefOpen);
+  document.getElementById('brief-arrow').classList.toggle('open', briefOpen);
+}
+
 function renderRoundGuide() {
   const guide = ROUND_GUIDES[game.round];
   if (!guide) return;
@@ -760,6 +826,7 @@ function startGame() {
   document.getElementById('result-banner').classList.add('hidden');
   document.getElementById('shock-banner').classList.add('hidden');
   document.getElementById('submit-btn').disabled = false;
+  buildInlineBrief();
   renderRoundGuide();
   renderLeaderboard('leaderboard');
   updateBubbleUI();
