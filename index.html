@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategy Canvas Arena — Solo Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: linear-gradient(160deg, #f5f0e8 0%, #eee8da 100%);
+  color: #1a1a1a; font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+.hidden { display: none !important; }
+.container { max-width: 720px; margin: 0 auto; padding: 20px 24px; }
+
+h1, h2, h3, h4 { font-weight: 700; }
+h3 { font-size: 0.85rem; margin-bottom: 12px; letter-spacing: 0.04em;
+  display: inline; background: linear-gradient(transparent 55%, #fde68a 55%); padding: 0 4px;
+}
+
+.card {
+  border: 2px solid #444; border-radius: 14px; padding: 20px;
+  margin-bottom: 16px; background: #fff;
+  box-shadow: 3px 3px 0 #ccc5b8;
+}
+
+button, .btn {
+  background: transparent; border: 2px solid #555;
+  padding: 10px 28px; font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.04em; cursor: pointer;
+  font-size: 0.85rem; font-weight: 600; color: #1a1a1a;
+  border-radius: 10px; transition: all 0.15s;
+  box-shadow: 2px 2px 0 #ccc5b8;
+}
+button:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 #ccc5b8; }
+button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #ccc5b8; }
+button:disabled { opacity: 0.25; cursor: not-allowed; pointer-events: none; }
+button.primary {
+  background: #2563EB; color: #fff; border: 2.5px solid #1a1a1a;
+  box-shadow: 3px 3px 0 #1a1a1a;
+}
+button.primary:hover { background: #1d4ed8; color: #fff; transform: translate(-1px, -1px); box-shadow: 5px 5px 0 #1a1a1a; }
+button.primary:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #1a1a1a; }
+button.btn-small { padding: 6px 14px; font-size: 0.75rem; }
+
+.status-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; margin-bottom: 16px; font-size: 0.85rem;
+  border-bottom: 2px solid #555; letter-spacing: 0.03em;
+}
+.round-badge { font-weight: 700; }
+
+.segment-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+.segment-card {
+  border: 2px solid #555; border-radius: 8px; padding: 14px 12px;
+  cursor: pointer; text-align: center;
+  transition: background 0.15s, color 0.15s, transform 0.1s, border-color 0.15s;
+}
+.segment-card:hover { background: #faf6ef; transform: scale(1.02); }
+.segment-card.selected { border-width: 2.5px; }
+#seg-freelancers.selected { background: #4A90D9; color: #fff; border-color: #3672b5; }
+#seg-freelancers.selected .seg-desc { color: #d4e4f7; }
+#seg-enterprise.selected { background: #2ECC71; color: #fff; border-color: #25a25a; }
+#seg-enterprise.selected .seg-desc { color: #c8f7da; }
+#seg-students.selected { background: #E67E22; color: #fff; border-color: #bf6819; }
+#seg-students.selected .seg-desc { color: #fce0c4; }
+.seg-name { font-weight: 700; font-size: 0.9rem; letter-spacing: 0.02em; margin-bottom: 4px; }
+.seg-desc { font-size: 0.82rem; color: #555; line-height: 1.6; }
+
+.activity-row { display: flex; align-items: center; gap: 16px; padding: 10px 0; border-bottom: 1px solid #e0e0dc; }
+.activity-row:last-child { border-bottom: none; }
+.act-label { width: 140px; font-size: 0.92rem; font-weight: 700; letter-spacing: 0.02em; flex-shrink: 0; }
+.act-bubbles { display: flex; gap: 6px; }
+.bubble {
+  width: 40px; height: 40px; border: 2px solid #888; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 14px; font-weight: 600;
+  font-family: 'Inter', system-ui, sans-serif;
+  transition: background 0.12s, color 0.12s, transform 0.1s; user-select: none;
+}
+.bubble:hover { background: #e8e2d8; transform: scale(1.08); }
+.bubble.selected { background: #2563EB; color: #fff; border-color: #2563EB; }
+.bubble.selected:hover { background: #1d4ed8; }
+.bubble.disabled { opacity: 0.2; pointer-events: none; }
+
+.budget-bar-text { font-size: 0.88rem; margin: 12px 0 4px; font-weight: 500; }
+.budget-bar-visual { height: 6px; border-radius: 3px; background: #e0dbd0; margin: 4px 0 16px; position: relative; }
+.budget-fill { height: 100%; background: linear-gradient(90deg, #4A90D9, #2ECC71, #E67E22); border-radius: 3px; transition: width 0.3s ease; }
+.budget-fill.over { background: #d00; }
+
+.result-banner {
+  border: 2px solid #444; border-radius: 10px; padding: 20px; margin-bottom: 16px;
+  text-align: center; background: #fff; box-shadow: 3px 3px 0 #ccc5b8;
+}
+.result-banner .big-num { font-size: 2rem; font-weight: 700; margin: 8px 0; color: #2563EB; }
+.result-banner .result-meta { font-size: 0.85rem; color: #444; }
+
+.shock-banner {
+  border: 2px solid #d00; border-radius: 10px; padding: 20px; margin-bottom: 16px;
+  background: #fff0f0; animation: shake 0.5s ease-in-out;
+}
+.shock-banner h3 { color: #d00; font-size: 0.85rem; background: none; display: block; }
+.shock-banner p { font-size: 0.85rem; margin-top: 8px; line-height: 1.5; }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+.chart-container { position: relative; height: 300px; margin: 16px 0; }
+
+.lb-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid #e0e0dc; font-size: 0.88rem;
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-rank { width: 36px; font-weight: 700; color: #444; }
+.lb-name { flex: 1; }
+.lb-score { font-weight: 700; text-align: right; font-family: 'IBM Plex Mono', monospace; }
+.lb-row.you { background: #fde68a; border-radius: 6px; margin: 0 -8px; padding: 8px; }
+
+.insight-cards { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
+.insight-card {
+  flex: 1 1 280px; position: relative;
+  background: #fffef9; border: 2px solid #222; border-radius: 14px;
+  padding: 20px 20px 20px 52px; line-height: 1.65; font-size: 0.92rem; color: #1a1a1a;
+  box-shadow: 3px 3px 0 #e0e0dc; transform: rotate(var(--rot, 0deg));
+}
+.insight-card p { margin: 0; }
+.insight-num {
+  position: absolute; left: 16px; top: 18px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #2563eb; color: #fff; font-size: 0.75rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Intro screen */
+.intro-inner {
+  background: #fff; border-radius: 16px; padding: 56px 48px 48px;
+  border: 2.5px solid #444; box-shadow: 4px 4px 0 #ccc5b8;
+  max-width: 480px; margin: 0 auto; text-align: center;
+  transform: rotate(-0.6deg);
+}
+.intro-the { font-size: 1rem; color: #888; font-weight: 400; margin-bottom: 4px; letter-spacing: 0.08em; }
+.intro-title {
+  font-size: clamp(36px, 7vw, 52px); font-weight: 800; color: #1a1a1a;
+  line-height: 1.05; letter-spacing: -0.02em;
+}
+.intro-title-highlight { background: linear-gradient(transparent 50%, #fde68a 50%); padding: 0 6px; }
+.intro-rule { height: 3px; border-radius: 2px; background: #2563EB; width: 60px; margin: 20px auto 18px; }
+.intro-subtitle { font-size: 0.88rem; color: #666; font-weight: 500; margin-bottom: 32px; letter-spacing: 0.04em; }
+.intro-badge {
+  display: inline-block; background: #fde68a; border: 1.5px solid #d4a800; border-radius: 20px;
+  padding: 4px 14px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 24px; color: #7c6600;
+}
+
+/* Briefing */
+.briefing-page { max-width: 600px; margin: 0 auto; padding: 40px 24px; }
+.briefing-step { color: #2563EB; font-weight: 600; font-size: 0.78rem; letter-spacing: 0.06em; margin-bottom: 8px; }
+.briefing-page h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; display: inline; background: linear-gradient(transparent 55%, #fde68a 55%); padding: 0 4px; }
+.briefing-page p { font-size: 0.92rem; line-height: 1.8; margin-top: 12px; color: #444; }
+.briefing-callout {
+  border-radius: 10px; border: 2px solid #e0dcd4; background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 16px; margin-top: 16px;
+  font-size: 0.88rem; line-height: 1.6;
+}
+.briefing-item {
+  border-radius: 10px; border: 2px solid #e0dcd4; background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 12px 14px; margin-bottom: 8px;
+}
+.briefing-item .item-name { font-weight: 700; font-size: 0.88rem; letter-spacing: 0.02em; }
+.briefing-item .item-desc { font-size: 0.84rem; color: #555; margin-top: 4px; }
+.briefing-seg {
+  border-radius: 10px; border: 2px solid #e0dcd4; background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 14px; margin-bottom: 8px;
+}
+.briefing-seg .seg-title { font-weight: 700; font-size: 0.88rem; }
+.briefing-seg .seg-detail { font-size: 0.82rem; color: #555; margin-top: 3px; }
+.briefing-nav { display: flex; gap: 12px; margin-top: 28px; align-items: center; }
+.briefing-nav .dot {
+  width: 10px; height: 10px; border: 2px solid #aaa; border-radius: 50%; flex-shrink: 0;
+}
+.briefing-nav .dot.active { background: #2563EB; border-color: #2563EB; }
+.briefing-rules { margin-top: 12px; padding-left: 20px; }
+.briefing-rules li { font-size: 0.88rem; line-height: 1.7; color: #444; }
+
+/* Game over */
+.game-over-inner {
+  background: #fff; border-radius: 16px; padding: 48px;
+  border: 2.5px solid #444; box-shadow: 4px 4px 0 #ccc5b8;
+  max-width: 520px; margin: 0 auto; text-align: center;
+}
+.game-over-inner h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+.game-over-inner .final-score { font-size: 2.5rem; font-weight: 800; color: #2563EB; margin: 16px 0; }
+.game-over-inner .final-rank { font-size: 1.1rem; color: #444; margin-bottom: 24px; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .segment-grid { grid-template-columns: 1fr; }
+  .act-label { width: 100px; font-size: 0.8rem; }
+  .bubble { width: 34px; height: 34px; font-size: 12px; }
+  .intro-inner { padding: 36px 24px; }
+  .briefing-page { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== INTRO ===== -->
+<div id="screen-intro">
+  <div class="container" style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+    <div class="intro-inner">
+      <div class="intro-badge">SOLO PRACTICE</div>
+      <div class="intro-the">the</div>
+      <div class="intro-title"><span class="intro-title-highlight">Strategy Canvas</span> Arena</div>
+      <div class="intro-rule"></div>
+      <div class="intro-subtitle">Practice making strategic trade-offs against AI competitors</div>
+      <button class="primary" style="padding:16px 56px;font-size:1rem;" onclick="showBriefing()">Begin</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BRIEFING ===== -->
+<div id="screen-briefing" class="hidden">
+  <div id="brief-1" class="briefing-page">
+    <div class="briefing-step">Step 1 of 3 — The Scenario</div>
+    <h1>You're the CEO of an AI design tool startup</h1>
+    <p>You've raised seed funding and have 3 rounds to build the most successful product. Each round you'll decide which customer segment to target and how to allocate your investment across 7 product areas.</p>
+    <div class="briefing-callout">
+      <strong>The catch:</strong> You have a limited budget of <strong>20 points</strong> to spread across 7 activities. You can't be great at everything — that's the strategic trade-off.
+    </div>
+    <div class="briefing-nav">
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+      <div style="flex:1"></div>
+      <button class="primary" onclick="showBrief(2)">Next &rarr;</button>
+    </div>
+  </div>
+
+  <div id="brief-2" class="briefing-page hidden">
+    <div class="briefing-step">Step 2 of 3 — Product Areas</div>
+    <h1>Your 7 investment areas</h1>
+    <p>Allocate 0–5 points to each. Total budget: 20 points.</p>
+    <div id="brief-activities" style="margin-top:16px;"></div>
+    <div class="briefing-nav">
+      <div class="dot active"></div><div class="dot active"></div><div class="dot"></div>
+      <div style="flex:1"></div>
+      <button onclick="showBrief(1)">&larr; Back</button>
+      <button class="primary" onclick="showBrief(3)">Next &rarr;</button>
+    </div>
+  </div>
+
+  <div id="brief-3" class="briefing-page hidden">
+    <div class="briefing-step">Step 3 of 3 — Customer Segments</div>
+    <h1>Choose who to serve</h1>
+    <p>Each segment has different needs and willingness to pay. Pick one per round.</p>
+    <div id="brief-segments" style="margin-top:16px;"></div>
+    <div class="briefing-callout" style="margin-top:16px;">
+      <strong>Remember:</strong> Strategy is what you choose <em>not</em> to do. You're competing against 6 other companies (AI-controlled). After 3 rounds, the team with the highest cumulative revenue wins.
+    </div>
+    <div class="briefing-nav">
+      <div class="dot active"></div><div class="dot active"></div><div class="dot active"></div>
+      <div style="flex:1"></div>
+      <button onclick="showBrief(2)">&larr; Back</button>
+      <button class="primary" onclick="startGame()">Start Playing &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GAME ===== -->
+<div id="screen-game" class="hidden">
+  <div class="container">
+    <div class="status-bar">
+      <div class="round-badge" id="round-badge">Round 1 / 3</div>
+      <div><strong id="player-name">You</strong></div>
+      <div>Score: $<span id="player-score">0</span></div>
+    </div>
+
+    <div id="shock-banner" class="shock-banner hidden"></div>
+
+    <div id="result-banner" class="result-banner hidden">
+      <div style="font-size:0.78rem;letter-spacing:0.1em;font-weight:600;">Round <span id="result-round"></span> Results</div>
+      <div class="big-num">+$<span id="result-revenue">0</span></div>
+      <div class="result-meta"><span id="result-customers">0</span> customers | <span id="result-share">0</span>% market share</div>
+    </div>
+
+    <div id="controls-card" class="card">
+      <h3>Target Customer Segment</h3>
+      <div style="display:block;margin-bottom:16px;"></div>
+      <div id="segments" class="segment-grid"></div>
+      <h3 style="margin-top:20px;">Allocate Investment Points</h3>
+      <div style="display:block;margin-bottom:8px;"></div>
+      <div class="budget-bar-text">Budget: <strong><span id="budget-used">0</span></strong> / 20 points used</div>
+      <div class="budget-bar-visual"><div id="budget-fill" class="budget-fill" style="width:0%"></div></div>
+      <div id="sliders"></div>
+      <button id="submit-btn" class="primary" onclick="submitRound()" style="width:100%;margin-top:12px;padding:14px 28px;">Submit Allocation &rarr;</button>
+    </div>
+
+    <div id="analysis-section" class="hidden">
+      <div id="insights-container"></div>
+      <div class="card">
+        <h3>Revenue This Round</h3>
+        <div style="display:block;margin-bottom:8px;"></div>
+        <div class="chart-container"><canvas id="revenue-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>All Strategy Canvases</h3>
+        <div style="display:block;margin-bottom:8px;"></div>
+        <div class="chart-container" style="height:350px;"><canvas id="canvas-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Segment Distribution</h3>
+        <div style="display:block;margin-bottom:8px;"></div>
+        <div class="chart-container" style="height:250px;"><canvas id="segment-chart"></canvas></div>
+      </div>
+      <button id="next-round-btn" class="primary" style="width:100%;padding:14px 28px;margin-bottom:16px;"></button>
+    </div>
+
+    <div class="card">
+      <h3>Leaderboard</h3>
+      <div style="display:block;margin-bottom:8px;"></div>
+      <div id="leaderboard"></div>
+    </div>
+
+    <div id="your-canvas-card" class="card">
+      <h3>Your Strategy Canvas</h3>
+      <div style="display:block;margin-bottom:8px;"></div>
+      <div class="chart-container"><canvas id="mini-canvas"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GAME OVER ===== -->
+<div id="screen-gameover" class="hidden">
+  <div class="container" style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+    <div class="game-over-inner">
+      <h1>Game Over</h1>
+      <div id="final-rank" class="final-rank"></div>
+      <div class="final-score">$<span id="final-score">0</span></div>
+      <div id="final-leaderboard" style="text-align:left;margin:20px 0;"></div>
+      <div id="final-insights" style="text-align:left;margin:20px 0;"></div>
+      <button class="primary" onclick="location.reload()" style="padding:14px 48px;margin-top:12px;">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// CONFIG
+// =====================================================================
+const CONFIG = {
+  activities: [
+    {id:"ai_quality", name:"AI Quality", description:"How good the AI output is"},
+    {id:"ease_of_use", name:"Ease of Use", description:"Simplicity and onboarding"},
+    {id:"customization", name:"Customization", description:"Control and flexibility"},
+    {id:"integrations", name:"Integrations", description:"Works with Figma, Slack, Notion..."},
+    {id:"community", name:"Community", description:"Templates, shared assets, marketplace"},
+    {id:"support", name:"Support", description:"Human support and onboarding"},
+    {id:"privacy", name:"Privacy", description:"On-device processing, SOC2, no data sharing"},
+  ],
+  segments: {
+    freelancers: {
+      name:"Freelancers", description:"Independent designers who want fast, affordable tools",
+      marketShare:0.40, wtp:30,
+      weights:{ai_quality:2,ease_of_use:5,customization:1,integrations:2,community:4,support:1,privacy:1},
+      priceSensitivity:0.8,
+    },
+    enterprise: {
+      name:"Enterprise Teams", description:"Large design teams needing security and collaboration",
+      marketShare:0.35, wtp:120,
+      weights:{ai_quality:2,ease_of_use:2,customization:3,integrations:4,community:1,support:4,privacy:5},
+      priceSensitivity:0.2,
+    },
+    students: {
+      name:"Design Students", description:"Learners who want powerful tools at low cost",
+      marketShare:0.25, wtp:15,
+      weights:{ai_quality:4,ease_of_use:4,customization:1,integrations:1,community:3,support:1,privacy:1},
+      priceSensitivity:0.9,
+    },
+  },
+  maxPoints: 20, maxPer: 5, totalRounds: 3, totalCustomers: 10000,
+  divergenceBonus: 0.15, focusBonus: 0.10,
+  shock: {
+    headline: "BREAKING: EU AI Regulation passed — strict data rules now apply to all AI tools",
+    description: "Privacy is now a top concern for ALL customer segments. Teams that invested in Privacy have an advantage.",
+    changes: { freelancers:{privacy:4}, enterprise:{privacy:5}, students:{privacy:3} },
+  },
+};
+const ACTIVITY_IDS = CONFIG.activities.map(a => a.id);
+
+// =====================================================================
+// BOT STRATEGIES
+// =====================================================================
+const BOT_TEMPLATES = [
+  {name:"Blue Ocean",  seg:"freelancers", bias:{ai_quality:3,ease_of_use:5,customization:1,integrations:2,community:4,support:2,privacy:1}},
+  {name:"Red Team",    seg:"enterprise",  bias:{ai_quality:2,ease_of_use:1,customization:3,integrations:4,community:1,support:4,privacy:5}},
+  {name:"Pixel Pirates",seg:"students",   bias:{ai_quality:5,ease_of_use:4,customization:2,integrations:2,community:3,support:2,privacy:2}},
+  {name:"Design Ninjas",seg:"freelancers",bias:{ai_quality:3,ease_of_use:3,customization:3,integrations:3,community:3,support:3,privacy:2}},
+  {name:"UX Wizards",  seg:"enterprise",  bias:{ai_quality:2,ease_of_use:1,customization:4,integrations:3,community:1,support:5,privacy:4}},
+  {name:"Bold Ventures",seg:"students",   bias:{ai_quality:4,ease_of_use:5,customization:1,integrations:1,community:4,support:1,privacy:1}},
+];
+
+function makeAllocation(bias) {
+  const alloc = {};
+  ACTIVITY_IDS.forEach(id => {
+    alloc[id] = Math.max(0, Math.min(CONFIG.maxPer, (bias[id]||2) + Math.floor(Math.random()*3)-1));
+  });
+  let total = Object.values(alloc).reduce((s,v)=>s+v,0);
+  while (total > CONFIG.maxPoints) {
+    const cands = ACTIVITY_IDS.filter(a => alloc[a] > 0);
+    if (!cands.length) break;
+    alloc[cands[Math.floor(Math.random()*cands.length)]]--;
+    total--;
+  }
+  return alloc;
+}
+
+function adaptBot(bot, roundResults, round) {
+  if (round <= 1) return;
+  const myResult = roundResults[bot.id];
+  const topResult = Object.values(roundResults).reduce((best,r)=> r.revenue > best.revenue ? r : best, {revenue:0});
+  if (myResult && topResult && myResult.revenue < topResult.revenue * 0.5) {
+    const keys = ACTIVITY_IDS.filter(a => bot.allocation[a] < CONFIG.maxPer);
+    if (keys.length) {
+      const boost = keys[Math.floor(Math.random()*keys.length)];
+      const reduce = ACTIVITY_IDS.filter(a => bot.allocation[a] > 1);
+      if (reduce.length) {
+        bot.allocation[reduce[Math.floor(Math.random()*reduce.length)]]--;
+        bot.allocation[boost]++;
+      }
+    }
+  }
+  ACTIVITY_IDS.forEach(id => {
+    if (Math.random() < 0.3) {
+      const shift = Math.random() < 0.5 ? 1 : -1;
+      const nv = bot.allocation[id] + shift;
+      if (nv >= 0 && nv <= CONFIG.maxPer) {
+        const total = Object.values(bot.allocation).reduce((s,v)=>s+v,0) + shift;
+        if (total <= CONFIG.maxPoints) bot.allocation[id] = nv;
+      }
+    }
+  });
+}
+
+// =====================================================================
+// SIMULATION ENGINE
+// =====================================================================
+function getSegWeights(shockActive) {
+  const w = {};
+  for (const [sid, seg] of Object.entries(CONFIG.segments)) {
+    w[sid] = {...seg.weights};
+    if (shockActive && CONFIG.shock.changes[sid]) Object.assign(w[sid], CONFIG.shock.changes[sid]);
+  }
+  return w;
+}
+
+function computeFit(alloc, segW) {
+  return ACTIVITY_IDS.reduce((s,id) => s + (alloc[id]||0)*(segW[id]||0), 0);
+}
+function computePrice(alloc) {
+  return ACTIVITY_IDS.reduce((s,id) => s + (alloc[id]||0), 0) / CONFIG.maxPoints;
+}
+function cosineSim(a, b) {
+  const dot = ACTIVITY_IDS.reduce((s,k) => s + (a[k]||0)*(b[k]||0), 0);
+  const magA = Math.sqrt(ACTIVITY_IDS.reduce((s,k) => s + (a[k]||0)**2, 0)) || 1;
+  const magB = Math.sqrt(ACTIVITY_IDS.reduce((s,k) => s + (b[k]||0)**2, 0)) || 1;
+  return dot / (magA * magB);
+}
+
+function runSimulation(teams, shockActive) {
+  const segW = getSegWeights(shockActive);
+  const segTeams = {}; for (const sid in CONFIG.segments) segTeams[sid] = [];
+  teams.forEach(t => segTeams[t.segment].push(t));
+
+  const results = {};
+  for (const [sid, seg] of Object.entries(CONFIG.segments)) {
+    const inSeg = segTeams[sid]; if (!inSeg.length) continue;
+    const segCust = Math.floor(CONFIG.totalCustomers * seg.marketShare);
+    const raw = {};
+    inSeg.forEach(t => {
+      let fit = computeFit(t.allocation, segW[sid]);
+      fit *= (1 - computePrice(t.allocation) * seg.priceSensitivity * 0.3);
+      if (t.prevSegment === sid) fit *= (1 + CONFIG.focusBonus);
+      raw[t.id] = Math.max(fit, 0.1);
+    });
+    if (inSeg.length > 1) {
+      inSeg.forEach(t => {
+        const avgSim = inSeg.filter(o=>o.id!==t.id).reduce((s,o)=>s+cosineSim(t.allocation,o.allocation),0)/(inSeg.length-1);
+        raw[t.id] *= (1 + (1-avgSim) * CONFIG.divergenceBonus);
+      });
+    }
+    const totalScore = Object.values(raw).reduce((s,v)=>s+v,0);
+    inSeg.forEach(t => {
+      const share = totalScore > 0 ? raw[t.id]/totalScore : 0;
+      const cust = Math.floor(segCust * share);
+      results[t.id] = {
+        segment:sid, customers:cust,
+        revenue: Math.round(cust * seg.wtp * computePrice(t.allocation)),
+        sharePct: Math.round(share*1000)/10, fit: Math.round(raw[t.id]*10)/10,
+      };
+    });
+  }
+  teams.forEach(t => { if (!results[t.id]) results[t.id] = {segment:t.segment,customers:0,revenue:0,sharePct:0,fit:0}; });
+  return results;
+}
+
+// =====================================================================
+// INSIGHTS ENGINE
+// =====================================================================
+function generateInsights(teams, results, round) {
+  const ranked = [];
+  const segCounts = {}; for (const sid in CONFIG.segments) segCounts[sid] = [];
+  teams.forEach(t => segCounts[t.segment].push(t.name));
+
+  const crowded = Object.entries(segCounts).filter(([,n]) => n.length >= 2);
+  const empty = Object.entries(segCounts).filter(([,n]) => n.length === 0).map(([s])=>s);
+
+  crowded.forEach(([sid, names]) => {
+    ranked.push([60+names.length*10, `${names.length} teams targeted ${CONFIG.segments[sid].name} — that's a crowded market. When everyone fights for the same customers, margins shrink and differentiation becomes do-or-die.`]);
+  });
+
+  const sims = [];
+  for (let i=0;i<teams.length;i++) for (let j=i+1;j<teams.length;j++) {
+    const s = cosineSim(teams[i].allocation, teams[j].allocation);
+    if (s > 0.9) sims.push([teams[i].name,teams[j].name,s]);
+  }
+  sims.forEach(([a,b]) => {
+    ranked.push([80, `${a} and ${b} are running near-identical strategies. Neither has a real edge — they're splitting the same value.`]);
+  });
+
+  const sorted = teams.map(t=>({name:t.name,...results[t.id]})).sort((a,b)=>b.revenue-a.revenue);
+  if (sorted.length >= 2 && sorted[0].revenue > 0) {
+    const ratio = sorted[0].revenue / Math.max(sorted[sorted.length-1].revenue, 1);
+    if (ratio >= 3) ranked.push([75, `${sorted[0].name} earned $${sorted[0].revenue.toLocaleString()} while ${sorted[sorted.length-1].name} made just $${sorted[sorted.length-1].revenue.toLocaleString()} — a ${Math.round(ratio)}x gap. Focused strategy beats spreading thin.`]);
+  }
+
+  if (empty.length && teams.length >= 3) {
+    ranked.push([40, `Nobody is targeting ${empty.map(s=>CONFIG.segments[s].name).join(', ')}. That's uncontested territory — Blue Ocean opportunity or dead end?`]);
+  }
+
+  teams.forEach(t => {
+    const total = Object.values(t.allocation).reduce((s,v)=>s+v,0);
+    const maxV = Math.max(...Object.values(t.allocation));
+    if (total >= 17 && maxV <= 2) {
+      ranked.push([70, `${t.name} spent ${total} points but never went above 2 in anything. Trying to be good at everything usually means being great at nothing.`]);
+    }
+  });
+
+  if (round >= 2) {
+    const switchers = teams.filter(t=>t.prevSegment && t.prevSegment !== t.segment).map(t=>t.name);
+    if (switchers.length) ranked.push([55, `${switchers.join(', ')} switched segment this round. Pivoting means abandoning the customers you built for — was it worth it?`]);
+  }
+
+  ranked.sort((a,b) => b[0]-a[0]);
+  const out = [];
+  for (const [prio, text] of ranked) {
+    if (out.length >= 5) break;
+    if (out.length >= 3 && prio < 60) break;
+    if (prio >= 40) out.push(text);
+  }
+  return out;
+}
+
+// =====================================================================
+// GAME STATE
+// =====================================================================
+const TEAM_COLORS = ['#4A90D9','#2ECC71','#E67E22','#9B59B6','#E74C3C','#1ABC9C','#F1C40F'];
+let game = { round:0, shockActive:false, shockShown:false, teams:[], history:[], playerScore:0 };
+let allocations = {};
+let selectedSegment = null;
+let revenueChart = null, canvasChart = null, segChart = null, miniChart = null;
+
+function initGame() {
+  ACTIVITY_IDS.forEach(id => allocations[id] = 0);
+  game.teams = [{
+    id:'player', name:'You', allocation:{}, segment:null, prevSegment:null, score:0, isPlayer:true,
+  }];
+  BOT_TEMPLATES.forEach((b,i) => {
+    game.teams.push({
+      id:'bot_'+i, name:b.name, allocation:makeAllocation(b.bias),
+      segment:b.seg, prevSegment:null, score:0, isPlayer:false, templateIdx:i,
+    });
+  });
+}
+
+// =====================================================================
+// UI BUILDING
+// =====================================================================
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function buildBriefing() {
+  let actHtml = '';
+  CONFIG.activities.forEach(a => {
+    actHtml += `<div class="briefing-item"><div class="item-name">${esc(a.name)}</div><div class="item-desc">${esc(a.description)}</div></div>`;
+  });
+  document.getElementById('brief-activities').innerHTML = actHtml;
+
+  let segHtml = '';
+  for (const [sid, seg] of Object.entries(CONFIG.segments)) {
+    segHtml += `<div class="briefing-seg"><div class="seg-title">${esc(seg.name)}</div><div class="seg-detail">${esc(seg.description)} — WTP: $${seg.wtp}/mo</div></div>`;
+  }
+  document.getElementById('brief-segments').innerHTML = segHtml;
+}
+
+function buildSegments() {
+  let html = '';
+  for (const [sid, seg] of Object.entries(CONFIG.segments)) {
+    html += `<div id="seg-${sid}" class="segment-card" onclick="selectSegment('${sid}')"><div class="seg-name">${esc(seg.name)}</div><div class="seg-desc">${esc(seg.description)}</div></div>`;
+  }
+  document.getElementById('segments').innerHTML = html;
+}
+
+function buildBubbles() {
+  let html = '';
+  CONFIG.activities.forEach(act => {
+    html += `<div class="activity-row"><div class="act-label">${esc(act.name)}</div><div class="act-bubbles" id="bubbles-${act.id}">`;
+    for (let v = 0; v <= CONFIG.maxPer; v++) {
+      html += `<div class="bubble" data-act="${act.id}" data-val="${v}" onclick="setBubble('${act.id}',${v})">${v}</div>`;
+    }
+    html += '</div></div>';
+  });
+  document.getElementById('sliders').innerHTML = html;
+}
+
+function selectSegment(sid) {
+  selectedSegment = sid;
+  document.querySelectorAll('.segment-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('seg-'+sid)?.classList.add('selected');
+}
+
+function setBubble(actId, val) {
+  const old = allocations[actId];
+  const total = Object.values(allocations).reduce((s,v)=>s+v,0) - old + val;
+  if (total > CONFIG.maxPoints) return;
+  allocations[actId] = val;
+  updateBubbleUI();
+}
+
+function updateBubbleUI() {
+  const total = Object.values(allocations).reduce((s,v)=>s+v,0);
+  CONFIG.activities.forEach(act => {
+    const bubbles = document.querySelectorAll(`#bubbles-${act.id} .bubble`);
+    bubbles.forEach(b => {
+      const v = parseInt(b.dataset.val);
+      b.classList.toggle('selected', v === allocations[act.id]);
+      const wouldBe = total - allocations[act.id] + v;
+      b.classList.toggle('disabled', v !== allocations[act.id] && wouldBe > CONFIG.maxPoints);
+    });
+  });
+  document.getElementById('budget-used').textContent = total;
+  const pct = (total / CONFIG.maxPoints) * 100;
+  const fill = document.getElementById('budget-fill');
+  fill.style.width = pct + '%';
+  fill.classList.toggle('over', total > CONFIG.maxPoints);
+}
+
+function renderLeaderboard(containerId) {
+  const sorted = [...game.teams].sort((a,b)=>b.score-a.score);
+  const el = document.getElementById(containerId);
+  el.innerHTML = sorted.map((t,i) => {
+    const isYou = t.isPlayer;
+    return `<div class="lb-row${isYou?' you':''}"><span class="lb-rank">${i+1}</span><span class="lb-name">${esc(t.name)}</span><span class="lb-score">$${t.score.toLocaleString()}</span></div>`;
+  }).join('');
+}
+
+function updateMiniCanvas() {
+  const ctx = document.getElementById('mini-canvas');
+  const labels = CONFIG.activities.map(a => a.name);
+  const data = ACTIVITY_IDS.map(id => allocations[id] || 0);
+  if (miniChart) miniChart.destroy();
+  miniChart = new Chart(ctx, {
+    type:'radar',
+    data:{ labels, datasets:[{label:'Your Strategy',data,borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.1)',borderWidth:2,pointRadius:4}] },
+    options:{ responsive:true, maintainAspectRatio:false, scales:{r:{min:0,max:5,ticks:{stepSize:1,display:false},grid:{color:'#e0e0dc'},pointLabels:{font:{size:11,family:"'Inter',sans-serif"}}}}, plugins:{legend:{display:false}} }
+  });
+}
+
+// =====================================================================
+// SCREEN NAVIGATION
+// =====================================================================
+function showScreen(id) {
+  ['screen-intro','screen-briefing','screen-game','screen-gameover'].forEach(s => document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function showBriefing() { showScreen('screen-briefing'); showBrief(1); }
+function showBrief(n) {
+  [1,2,3].forEach(i => document.getElementById('brief-'+i).classList.toggle('hidden', i!==n));
+  window.scrollTo(0,0);
+}
+
+function startGame() {
+  initGame();
+  showScreen('screen-game');
+  game.round = 1;
+  document.getElementById('round-badge').textContent = `Round ${game.round} / ${CONFIG.totalRounds}`;
+  document.getElementById('controls-card').classList.remove('hidden');
+  document.getElementById('analysis-section').classList.add('hidden');
+  document.getElementById('result-banner').classList.add('hidden');
+  document.getElementById('shock-banner').classList.add('hidden');
+  document.getElementById('submit-btn').disabled = false;
+  renderLeaderboard('leaderboard');
+  updateBubbleUI();
+  updateMiniCanvas();
+}
+
+// =====================================================================
+// SUBMIT & SIMULATE
+// =====================================================================
+function submitRound() {
+  if (!selectedSegment) { alert('Please select a target customer segment'); return; }
+  const total = Object.values(allocations).reduce((s,v)=>s+v,0);
+  if (total < 10 && !confirm(`You're only using ${total}/20 points. Submit anyway?`)) return;
+
+  const player = game.teams[0];
+  player.allocation = {...allocations};
+  player.segment = selectedSegment;
+
+  game.teams.filter(t=>!t.isPlayer).forEach(bot => {
+    const tmpl = BOT_TEMPLATES[bot.templateIdx];
+    bot.prevSegment = bot.segment;
+    if (game.round === 1) {
+      bot.allocation = makeAllocation(tmpl.bias);
+      bot.segment = tmpl.seg;
+    } else {
+      adaptBot(bot, game.history[game.history.length-1], game.round);
+      if (game.shockActive && Math.random() < 0.4) {
+        const cur = bot.allocation.privacy || 0;
+        if (cur < CONFIG.maxPer) {
+          const reduce = ACTIVITY_IDS.filter(a => a !== 'privacy' && bot.allocation[a] > 0);
+          if (reduce.length) { bot.allocation[reduce[Math.floor(Math.random()*reduce.length)]]--; bot.allocation.privacy = cur+1; }
+        }
+      }
+    }
+  });
+
+  const results = runSimulation(game.teams, game.shockActive);
+  game.history.push(results);
+
+  game.teams.forEach(t => {
+    t.score += results[t.id].revenue;
+  });
+  game.playerScore = player.score;
+
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('controls-card').classList.add('hidden');
+  showResults(results);
+}
+
+function showResults(results) {
+  const pr = results['player'];
+  document.getElementById('result-round').textContent = game.round;
+  document.getElementById('result-revenue').textContent = pr.revenue.toLocaleString();
+  document.getElementById('result-customers').textContent = pr.customers.toLocaleString();
+  document.getElementById('result-share').textContent = pr.sharePct;
+  document.getElementById('result-banner').classList.remove('hidden');
+  document.getElementById('player-score').textContent = game.playerScore.toLocaleString();
+
+  renderLeaderboard('leaderboard');
+  renderCharts(results);
+  renderInsights(results);
+
+  const nextBtn = document.getElementById('next-round-btn');
+  if (game.round >= CONFIG.totalRounds) {
+    nextBtn.textContent = 'See Final Results';
+    nextBtn.onclick = showGameOver;
+  } else {
+    const shockNext = (game.round === 2 && !game.shockActive);
+    nextBtn.textContent = `Start Round ${game.round + 1} →`;
+    nextBtn.onclick = () => nextRound(shockNext);
+  }
+  document.getElementById('analysis-section').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+function nextRound(triggerShock) {
+  game.round++;
+  const player = game.teams[0];
+  player.prevSegment = player.segment;
+
+  if (triggerShock) {
+    game.shockActive = true;
+    game.shockShown = true;
+    const sb = document.getElementById('shock-banner');
+    sb.innerHTML = `<h3>${esc(CONFIG.shock.headline)}</h3><p>${esc(CONFIG.shock.description)}</p>`;
+    sb.classList.remove('hidden');
+  }
+
+  document.getElementById('round-badge').textContent = `Round ${game.round} / ${CONFIG.totalRounds}`;
+  document.getElementById('controls-card').classList.remove('hidden');
+  document.getElementById('analysis-section').classList.add('hidden');
+  document.getElementById('result-banner').classList.add('hidden');
+  document.getElementById('submit-btn').disabled = false;
+  updateBubbleUI();
+  updateMiniCanvas();
+  window.scrollTo(0, 0);
+}
+
+function showGameOver() {
+  showScreen('screen-gameover');
+  const sorted = [...game.teams].sort((a,b)=>b.score-a.score);
+  const rank = sorted.findIndex(t=>t.isPlayer) + 1;
+  document.getElementById('final-score').textContent = game.playerScore.toLocaleString();
+  document.getElementById('final-rank').textContent = `You finished #${rank} out of ${game.teams.length} teams`;
+
+  let lbHtml = '';
+  sorted.forEach((t,i) => {
+    const isYou = t.isPlayer;
+    lbHtml += `<div class="lb-row${isYou?' you':''}"><span class="lb-rank">${i+1}</span><span class="lb-name">${esc(t.name)}</span><span class="lb-score">$${t.score.toLocaleString()}</span></div>`;
+  });
+  document.getElementById('final-leaderboard').innerHTML = lbHtml;
+}
+
+// =====================================================================
+// CHARTS
+// =====================================================================
+function renderCharts(results) {
+  const entries = game.teams.map(t => ({name:t.name, revenue:results[t.id].revenue, isPlayer:t.isPlayer})).sort((a,b)=>b.revenue-a.revenue);
+
+  const rCtx = document.getElementById('revenue-chart');
+  if (revenueChart) revenueChart.destroy();
+  revenueChart = new Chart(rCtx, {
+    type:'bar',
+    data:{
+      labels: entries.map(e=>e.name),
+      datasets:[{data:entries.map(e=>e.revenue), backgroundColor:entries.map((e,i)=>e.isPlayer?'#2563EB':TEAM_COLORS[i%TEAM_COLORS.length]+'88'), borderWidth:0, borderRadius:3}]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      scales:{x:{ticks:{callback:v=>'$'+v.toLocaleString(),color:'#444'},grid:{color:'#e0e0dc'}},y:{ticks:{color:'#1a1a1a',font:{size:11}},grid:{display:false}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.parsed.x.toLocaleString()}}}
+    }
+  });
+
+  const cCtx = document.getElementById('canvas-chart');
+  const labels = CONFIG.activities.map(a=>a.name);
+  const datasets = game.teams.map((t,i)=>({
+    label:t.name, data:ACTIVITY_IDS.map(id=>t.allocation[id]||0),
+    borderColor:t.isPlayer?'#2563EB':TEAM_COLORS[i%TEAM_COLORS.length],
+    borderWidth:t.isPlayer?3:1.5, pointRadius:t.isPlayer?5:3,
+    fill:false, tension:0.1, borderDash:t.isPlayer?[]:[4,4],
+  }));
+  if (canvasChart) canvasChart.destroy();
+  canvasChart = new Chart(cCtx, {
+    type:'line',
+    data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:5,ticks:{stepSize:1,color:'#666'},grid:{color:'#e0e0dc'}},x:{ticks:{color:'#666',font:{size:11}},grid:{color:'#e0e0dc'}}},plugins:{legend:{labels:{color:'#1a1a1a',font:{size:11}}}}}
+  });
+
+  const segCounts = {};
+  for (const sid in CONFIG.segments) segCounts[sid] = 0;
+  game.teams.forEach(t => segCounts[t.segment]++);
+  const segColors = ['#4A90D9','#2ECC71','#E67E22'];
+  const sCtx = document.getElementById('segment-chart');
+  if (segChart) segChart.destroy();
+  segChart = new Chart(sCtx, {
+    type:'doughnut',
+    data:{
+      labels:Object.entries(CONFIG.segments).map(([,s])=>s.name),
+      datasets:[{data:Object.values(segCounts),backgroundColor:segColors,borderWidth:2,borderColor:'#fafaf8'}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'bottom',labels:{color:'#1a1a1a',font:{size:11},padding:12}}}}
+  });
+}
+
+function renderInsights(results) {
+  const insights = generateInsights(game.teams, results, game.round);
+  const container = document.getElementById('insights-container');
+  if (!insights.length) { container.innerHTML = ''; return; }
+  let html = '<div class="card"><h3>Key Insights</h3><div style="display:block;margin-bottom:8px;"></div><div class="insight-cards">';
+  insights.forEach((ins, idx) => {
+    const rot = ((idx % 3) - 1) * 0.8;
+    html += `<div class="insight-card" style="--rot:${rot}deg"><span class="insight-num">${idx+1}</span><p>${esc(ins)}</p></div>`;
+  });
+  html += '</div></div>';
+  container.innerHTML = html;
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+buildBriefing();
+buildSegments();
+buildBubbles();
+</script>
+</body>
+</html>
