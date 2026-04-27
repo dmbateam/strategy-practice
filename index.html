@@ -1220,16 +1220,29 @@ function submitReflection() {
   document.getElementById('ref-error').style.display = 'none';
 
   const gameSummary = buildGameSummary();
+  const finalRankStr = `#${gameSummary.finalRank} of ${gameSummary.totalTeams}`;
+  const finalScoreStr = '$' + gameSummary.finalScore.toLocaleString();
+  // Shared schema across d.MBA solo games — both Strategy Canvas Arena and
+  // The Lever hit the same EmailJS templates, distinguished by `game_name`.
+  // The `game_summary` blob is rendered verbatim so the template stays
+  // game-agnostic. Game-specific fields are kept alongside as escape hatches.
+  const game_summary =
+    `Final score: ${finalScoreStr}\n` +
+    `Final rank: ${finalRankStr}\n\n` +
+    `Round-by-round:\n${gameSummary.roundSummaries}`;
 
   const payload = {
     student_email: playerEmail,
+    game_name: 'Strategy Canvas Arena',
+    game_summary,
     confidence: confidence + '/10',
     takeaway,
     application,
     surprise,
     other: other || '(none)',
-    final_rank: `#${gameSummary.finalRank} of ${gameSummary.totalTeams}`,
-    final_score: '$' + gameSummary.finalScore.toLocaleString(),
+    // Strategy-specific (kept for back-compat)
+    final_rank: finalRankStr,
+    final_score: finalScoreStr,
     round_summaries: gameSummary.roundSummaries,
     to_email: 'admin@d.mba',
   };
